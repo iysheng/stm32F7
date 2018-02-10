@@ -31,14 +31,16 @@ CFLAGS += -I$(HALINC) -I$(USRINC) -I$(CPUINC)
 CFLAGS += -Wa,-mthumb
 
 CROSS_COMPILE_PATH ?= $(shell which $(CROSS_COMPILE)gcc)
-LD_PATH := /usr/local/arm/gcc-arm-none-eabi-6_2-2016q4/arm-none-eabi/lib/thumb/v7e-m
-LGCC_PATH := /usr/local/arm/gcc-arm-none-eabi-6_2-2016q4/lib/gcc/arm-none-eabi/6.2.1/thumb/v7e-m
+CROSS_COMPILE_PATH := $(dir $(CROSS_COMPILE_PATH))
+#LD_PATH := /opt/arm/gcc-arm-none-eabi-6_2-2016q4/arm-none-eabi/lib/thumb/v7e-m
+LD_PATH := $(CROSS_COMPILE_PATH)/../arm-none-eabi/lib/thumb/v7e-m
 
 LDFLAGS = -Bstatic -T STM32F767IGT_ITCM_FLASH.ld --gc-sections
-LDFLAGS += -L $(LD_PATH) -l c -L $(LGCC_PATH) -l gcc -Ttext 0x08002000
+LDFLAGS += -L $(LD_PATH) -lc
+LDFLAGS += -Ttext 0x08002000
 LDFLAGS += --gc-sections 
-$(info "CROSS_COMPILE_PATH="$(CROSS_COMPILE_PATH))
-
+PLATFORM_LIBGCC := -L $(shell dirname `$(CC) -print-libgcc-file-name`) -lgcc
+LDFLAGS += $(PLATFORM_LIBGCC)
 OBJS = $(CPUDIR)/startup_stm32f767xx.o
 OBJS += $(CPUDIR)/system_stm32f7xx.o
 OBJS += $(USRDIR)/yyfish.o
