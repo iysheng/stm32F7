@@ -24,23 +24,18 @@ USRINC = $(TOPDIR)/usr_inc
 
 CFLAGS = $(COREFLAGS) -c -O2 
 CFLAGS += -I$(HALINC) -I$(USRINC) -I$(CPUINC)
-#CFLAGS += -nostdlib
-#CFLAGS += -specs=nosys.specs
-#CFLAGS += -specs=nano.specs
-#CFLAGS += --specs=rdimon.specs
 CFLAGS += -Wa,-mthumb
 
-CROSS_COMPILE_PATH ?= $(shell which $(CROSS_COMPILE)gcc)
-CROSS_COMPILE_PATH := $(dir $(CROSS_COMPILE_PATH))
-#LD_PATH := /opt/arm/gcc-arm-none-eabi-6_2-2016q4/arm-none-eabi/lib/thumb/v7e-m
+CROSS_COMPILE_PATH ?= $(dir $(shell which $(CROSS_COMPILE)gcc))
 LD_PATH := $(CROSS_COMPILE_PATH)/../arm-none-eabi/lib/thumb/v7e-m
 
-LDFLAGS = -Bstatic -T STM32F767IGT_ITCM_FLASH.ld --gc-sections
+LDFLAGS = -Bstatic -T STM32F767IGT_ITCM_FLASH.ld
+#This line is important for code link the right libc
 LDFLAGS += -L $(LD_PATH) -lc
+LDFLAGS += -specs=nosys.specs
 LDFLAGS += -Ttext 0x08002000
-LDFLAGS += --gc-sections 
-PLATFORM_LIBGCC := -L $(shell dirname `$(CC) -print-libgcc-file-name`) -lgcc
-LDFLAGS += $(PLATFORM_LIBGCC)
+#PLATFORM_LIBGCC := -L $(shell dirname `$(CC) -print-libgcc-file-name`) -lgcc
+#LDFLAGS += $(PLATFORM_LIBGCC)
 OBJS = $(CPUDIR)/startup_stm32f767xx.o
 OBJS += $(CPUDIR)/system_stm32f7xx.o
 OBJS += $(USRDIR)/yyfish.o
@@ -57,7 +52,7 @@ yyfish.bin:yyfish
 	$(OBJCOPY) -O binary $< $@
 	
 yyfish:$(OBJS) $(LIBS)
-	$(LD) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
 %.o:%.c
 	$(CC) $(CFLAGS) $< -o $@
